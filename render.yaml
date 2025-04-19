@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: chatbot-api-dev
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers=2 --bind=0.0.0.0:10000
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://pen-chatbot-site.s3.eu-west-2.amazonaws.com,http://localhost:3000
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: OPENAI_MODEL
+        value: gpt-3.5-turbo  # Optional: specify model
+    disks:
+      - name: data  # Add disk for consistency with cron job
+        mountPath: /data
+
+  - type: cron
+    name: morehouse-scraper
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python cron_scrape.py
+    schedule: "0 0 * * *"
+    disks:
+      - name: data
+        mountPath: /data
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+
